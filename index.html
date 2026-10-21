@@ -1,1044 +1,764 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Gold Pipe | Order Management</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
-
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#0b1120;
-    color:#e5e7eb;
+:root {
+  --bg: #0b1120;
+  --panel: #172033;
+  --border: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --blue: #38bdf8;
+  --green: #22c55e;
+  --red: #f87171;
 }
-
-header{
-    background:#111827;
-    padding:18px;
-    border-bottom:1px solid #263449;
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
 }
-
-header h2{
-    margin:0;
-    color:#38bdf8;
+header {
+  padding: 20px;
+  background: #111b2e;
+  border-bottom: 1px solid var(--border);
 }
-
-.container{
-    max-width:1100px;
-    margin:auto;
-    padding:16px;
+header h1 { margin: 0; color: var(--blue); font-size: 23px; }
+header p { margin: 7px 0 0; color: var(--muted); }
+main { max-width: 1100px; margin: auto; padding: 16px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
-
-.card{
-    background:#111827;
-    border:1px solid #263449;
-    border-radius:12px;
-    padding:18px;
-    margin-bottom:16px;
+h2, h3 { margin-top: 0; }
+h3 { color: var(--blue); }
+label { display: block; margin: 12px 0 6px; }
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #0b1120;
+  color: white;
+  font-size: 15px;
 }
-
-input,select,button{
-    width:100%;
-    padding:12px;
-    margin:6px 0;
-    border-radius:7px;
-    border:1px solid #374151;
-    font-size:15px;
+button {
+  padding: 12px 15px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #082f49;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
 }
-
-input,select{
-    background:#0b1120;
-    color:white;
+button:disabled { opacity: .6; }
+.secondary { background: #334155; color: white; }
+.danger { background: #7f1d1d; color: white; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 }
-
-button{
-    background:#0284c7;
-    color:white;
-    border:none;
-    cursor:pointer;
-    font-weight:bold;
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
-
-button:hover{background:#0369a1}
-
-button:disabled{
-    opacity:.6;
-    cursor:not-allowed;
+.stat {
+  padding: 17px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
 }
-
-.tabs{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:8px;
-    margin-bottom:16px;
+.stat span { display: block; color: var(--muted); font-size: 13px; }
+.stat strong { display: block; font-size: 22px; margin-top: 8px; overflow-wrap: anywhere; }
+.small { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.message { margin-top: 12px; overflow-wrap: anywhere; }
+.good { color: var(--green); }
+.bad { color: var(--red); }
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
 }
-
-.tabs button{background:#1e293b}
-.tabs button.active{background:#0284c7}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:12px;
+nav button { margin: 0; }
+.hidden { display: none !important; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
 }
-
-.stat{
-    background:#172033;
-    padding:18px;
-    border-radius:10px;
-    margin-bottom:12px;
+th, td {
+  padding: 11px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
 }
-
-.stat strong{
-    display:block;
-    color:#38bdf8;
-    font-size:23px;
-    margin-top:10px;
-    overflow-wrap:anywhere;
-}
-
-.table-wrap{overflow-x:auto}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    min-width:600px;
-}
-
-th,td{
-    padding:10px;
-    text-align:left;
-    border-bottom:1px solid #263449;
-}
-
-th{color:#38bdf8}
-
-.small{
-    font-size:13px;
-    color:#9ca3af;
-    line-height:1.6;
-}
-
-.hidden{display:none!important}
-
-#message{
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-    padding:8px 0;
-}
-
-.success{color:#4ade80}
-.error{color:#f87171}
-
-@media(max-width:500px){
-    .container{padding:10px}
-    .card{padding:13px}
-}
+th { color: var(--blue); }
+.tablewrap { overflow-x: auto; }
+#loginCard { max-width: 480px; margin: 25px auto; }
+footer { text-align: center; padding: 25px; color: var(--muted); }
 </style>
 </head>
 
 <body>
-
 <header>
-    <h2>⭐ STAR GOLD PIPE</h2>
-    <div class="small">Order Management System</div>
+  <h1>🌟 STAR GOLD PIPE</h1>
+  <p>Order Management System</p>
 </header>
 
-<div class="container">
+<main>
+  <!-- DATABASE SETUP -->
+  <section id="setup" class="card">
+    <h3>⚙️ Connect Database</h3>
+    <p class="small">
+      আপনার নতুন Supabase Project URL ও Publishable Key দিন।
+      এগুলো এই ব্রাউজারে সংরক্ষিত হবে।
+    </p>
 
-    <!-- DATABASE SETUP -->
-    <section id="setup" class="card">
-        <h3>⚙️ Connect Database</h3>
+    <form id="configForm">
+      <label for="projectUrl">Supabase Project URL</label>
+      <input id="projectUrl" type="url"
+        placeholder="https://yourproject.supabase.co" required>
 
-        <p class="small">
-            Enter your Supabase Project URL and Publishable Key.
-            These are saved in this browser.
-        </p>
+      <label for="publicKey">Publishable Key</label>
+      <input id="publicKey"
+        placeholder="sb_publishable_..." required>
 
-        <form id="configForm">
-            <input id="projectUrl"
-                   type="url"
-                   placeholder="https://yourproject.supabase.co"
-                   required>
+      <button id="connectBtn" type="submit">Connect Database</button>
+      <button id="clearConfig" class="secondary" type="button">
+        Clear Saved Settings
+      </button>
+    </form>
+    <p id="configMessage" class="message"></p>
+  </section>
 
-            <input id="publicKey"
-                   placeholder="Supabase Publishable Key"
-                   required>
+  <!-- LOGIN -->
+  <section id="loginCard" class="card hidden">
+    <h2>🔐 Login</h2>
+    <p class="small">Admin অথবা অনুমোদিত Employee Account ব্যবহার করুন।</p>
 
-            <button id="connectBtn" type="submit">
-                Connect Database
-            </button>
-        </form>
+    <form id="loginForm">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" autocomplete="username" required>
 
-        <button type="button" id="changeConfigBtn"
-                class="hidden">
-            Change Database Settings
-        </button>
+      <label for="password">Password</label>
+      <input id="password" type="password"
+        autocomplete="current-password" required>
+
+      <button id="loginButton" type="submit">Login</button>
+    </form>
+    <p id="loginMessage" class="message"></p>
+  </section>
+
+  <!-- APPLICATION -->
+  <section id="app" class="hidden">
+    <div class="card">
+      <div class="grid">
+        <div>
+          <h2>Business Dashboard</h2>
+          <p id="welcome" class="small"></p>
+        </div>
+        <div>
+          <button id="refreshButton">Refresh Data</button>
+          <button id="logoutButton" class="danger">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Total Customers</span><strong id="customerCount">0</strong></div>
+      <div class="stat"><span>Total Orders</span><strong id="orderCount">0</strong></div>
+      <div class="stat"><span>Total Ordered Pieces</span><strong id="pieceCount">0</strong></div>
+      <div class="stat"><span>Delivered Pieces</span><strong id="deliveredCount">0</strong></div>
+      <div class="stat"><span>Total Order Value</span><strong id="salesValue">৳0</strong></div>
+      <div class="stat"><span>Recorded Payments</span><strong id="paidValue">৳0</strong></div>
+      <div class="stat"><span>Calculated Due</span><strong id="dueValue">৳0</strong></div>
+    </div>
+
+    <nav>
+      <button data-tab="customers">👥 Customers</button>
+      <button data-tab="orders">📦 New Order</button>
+      <button data-tab="delivery">🚚 Delivery</button>
+      <button data-tab="payments">💰 Payments</button>
+      <button data-tab="records">📋 Records</button>
+      <button data-tab="employees" id="employeeTab" class="hidden">👨‍💼 Employees</button>
+    </nav>
+
+    <!-- CUSTOMERS -->
+    <section id="customers" class="card tab">
+      <h3>👥 Add Customer</h3>
+      <form id="customerForm">
+        <div class="grid">
+          <div>
+            <label>Customer Name</label>
+            <input id="customerName" required>
+          </div>
+          <div>
+            <label>Mobile Number</label>
+            <input id="customerPhone" type="tel">
+          </div>
+        </div>
+        <label>Address</label>
+        <textarea id="customerAddress" rows="2"></textarea>
+        <button type="submit">Save Customer</button>
+      </form>
+      <p id="customerMessage" class="message"></p>
     </section>
 
-    <!-- LOGIN -->
-    <section id="login" class="card hidden">
-        <h3>🔐 Employee Login</h3>
+    <!-- ORDERS -->
+    <section id="orders" class="card tab hidden">
+      <h3>📦 Create Pipe Order</h3>
+      <form id="orderForm">
+        <label>Customer</label>
+        <select id="orderCustomer" required></select>
 
-        <form id="loginForm">
-            <input id="email"
-                   type="email"
-                   placeholder="Email Address"
-                   autocomplete="username"
-                   required>
-
-            <input id="password"
-                   type="password"
-                   placeholder="Password"
-                   autocomplete="current-password"
-                   required>
-
-            <button id="loginBtn" type="submit">
-                Login
-            </button>
-        </form>
-
-        <p class="small">
-            Employee accounts must be created in Supabase Authentication
-            by the administrator.
-        </p>
+        <div class="grid">
+          <div>
+            <label>Product Name</label>
+            <select id="productName" required>
+              <option value="Star Gold Thread Pipe">Star Gold Thread Pipe</option>
+              <option value="PVC Pipe">PVC Pipe</option>
+              <option value="HDPE Pipe">HDPE Pipe</option>
+              <option value="PPR Pipe">PPR Pipe</option>
+              <option value="GI Pipe">GI Pipe</option>
+              <option value="Steel Pipe">Steel Pipe</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label>Pipe Size</label>
+            <input id="pipeSize" placeholder='যেমন 1 inch' required>
+          </div>
+          <div>
+            <label>Quantity (Pieces)</label>
+            <input id="quantity" type="number" min="1" step="1" required>
+          </div>
+          <div>
+            <label>Price Per Piece (৳)</label>
+            <input id="unitPrice" type="number" min="0" step="0.01" required>
+          </div>
+        </div>
+        <button type="submit">Save Order</button>
+      </form>
+      <p id="orderMessage" class="message"></p>
     </section>
 
-    <!-- MAIN APPLICATION -->
-    <main id="app" class="hidden">
+    <!-- DELIVERY -->
+    <section id="delivery" class="card tab hidden">
+      <h3>🚚 Record Delivery</h3>
+      <form id="deliveryForm">
+        <label>Select Order</label>
+        <select id="deliveryOrder" required></select>
+        <label>Additional Pieces Delivered</label>
+        <input id="deliveryQuantity" type="number" min="1" step="1" required>
+        <button type="submit">Save Delivery</button>
+      </form>
+      <p class="small">এখানে আগে ডেলিভারি করা পিসের অতিরিক্ত পরিমাণ লিখবেন।</p>
+      <p id="deliveryMessage" class="message"></p>
+    </section>
 
-        <section class="card">
-            <div style="display:flex;justify-content:space-between;
-                        align-items:center;gap:12px;flex-wrap:wrap">
+    <!-- PAYMENTS -->
+    <section id="payments" class="card tab hidden">
+      <h3>💰 Record Customer Payment</h3>
+      <form id="paymentForm">
+        <label>Select Order</label>
+        <select id="paymentOrder" required></select>
+        <label>Payment Amount (৳)</label>
+        <input id="paymentAmount" type="number" min="0.01" step="0.01" required>
+        <button type="submit">Save Payment</button>
+      </form>
+      <p id="paymentMessage" class="message"></p>
+    </section>
 
-                <div>
-                    <strong id="userEmail"></strong>
-                    <div class="small">Star Gold Pipe Team</div>
-                </div>
+    <!-- RECORDS -->
+    <section id="records" class="card tab hidden">
+      <h3>📋 Order Records</h3>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Customer</th><th>Product</th>
+              <th>Size</th><th>Ordered</th><th>Delivered</th>
+              <th>Remaining</th><th>Price</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="orderRows"></tbody>
+        </table>
+      </div>
+      <h3 style="margin-top:25px">Customer List</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead>
+          <tbody id="customerRows"></tbody>
+        </table>
+      </div>
+    </section>
 
-                <button id="logoutBtn" style="width:auto">
-                    Logout
-                </button>
-            </div>
-        </section>
+    <!-- EMPLOYEES -->
+    <section id="employees" class="card tab hidden">
+      <h3>👨‍💼 Employee Accounts</h3>
+      <p>
+        Employee তৈরি করতে Supabase Dashboard → Authentication → Users
+        থেকে Add User ব্যবহার করুন। এরপর নিচের ফর্ম দিয়ে Profile তৈরি করুন।
+      </p>
+      <form id="employeeForm">
+        <label>Employee-এর Supabase User ID (UUID)</label>
+        <input id="employeeId" placeholder="Authentication Users থেকে User ID" required>
+        <label>Employee Name</label>
+        <input id="employeeName" required>
+        <button type="submit">Create Employee Profile</button>
+      </form>
+      <p class="small">
+        এই ফর্ম শুধু Profile তৈরি করে। এটি Email বা Password তৈরি করে না।
+        শুধুমাত্র অনুমোদিত Admin-এর জন্য এটি ব্যবহার করুন।
+      </p>
+      <p id="employeeMessage" class="message"></p>
+    </section>
+  </section>
+</main>
 
-        <nav class="tabs">
-            <button class="active" data-tab="dashboard">
-                Dashboard
-            </button>
-
-            <button data-tab="customers">
-                Customers
-            </button>
-
-            <button data-tab="orders">
-                Orders
-            </button>
-
-            <button data-tab="neworder">
-                + New Order
-            </button>
-        </nav>
-
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="tab">
-            <div class="grid">
-
-                <div class="stat">
-                    Total Customers
-                    <strong id="customerCount">0</strong>
-                </div>
-
-                <div class="stat">
-                    Total Orders
-                    <strong id="orderCount">0</strong>
-                </div>
-
-                <div class="stat">
-                    Total Sales (BDT)
-                    <strong id="salesTotal">৳0</strong>
-                </div>
-
-                <div class="stat">
-                    Total Pieces
-                    <strong id="piecesTotal">0</strong>
-                </div>
-
-            </div>
-
-            <div class="card">
-                <h3>Recent Orders</h3>
-                <div id="recentOrders" class="table-wrap">
-                    Loading...
-                </div>
-            </div>
-        </section>
-
-        <!-- CUSTOMERS -->
-        <section id="customers" class="tab hidden">
-
-            <div class="card">
-                <h3>👥 Add Customer</h3>
-
-                <form id="customerForm">
-
-                    <input id="cName"
-                           placeholder="Customer Name"
-                           maxlength="150"
-                           required>
-
-                    <input id="cPhone"
-                           placeholder="Mobile Number"
-                           maxlength="30"
-                           required>
-
-                    <input id="cAddress"
-                           placeholder="Full Address"
-                           maxlength="500">
-
-                    <button id="saveCustomerBtn" type="submit">
-                        Save Customer
-                    </button>
-
-                </form>
-            </div>
-
-            <div class="card">
-                <h3>Customer List</h3>
-
-                <input id="customerSearch"
-                       placeholder="Search name or phone">
-
-                <div id="customerTable" class="table-wrap">
-                    No customers loaded.
-                </div>
-            </div>
-        </section>
-
-        <!-- ORDERS -->
-        <section id="orders" class="tab hidden">
-
-            <div class="card">
-                <h3>📦 All Orders</h3>
-
-                <button id="refreshBtn">
-                    Refresh Data
-                </button>
-
-                <div id="ordersTable" class="table-wrap">
-                    No orders loaded.
-                </div>
-            </div>
-
-        </section>
-
-        <!-- NEW ORDER -->
-        <section id="neworder" class="tab hidden">
-
-            <div class="card">
-                <h3>➕ Create New Order</h3>
-
-                <form id="orderForm">
-
-                    <label>Customer</label>
-
-                    <select id="oCustomer" required>
-                        <option value="">Select Customer</option>
-                    </select>
-
-                    <label>Product Name</label>
-
-                    <input id="oProduct"
-                           value="Star Gold Thread Pipe"
-                           maxlength="150"
-                           required>
-
-                    <label>Pipe Size</label>
-
-                    <input id="oSize"
-                           placeholder="Example: 1 inch"
-                           maxlength="100"
-                           required>
-
-                    <label>Quantity (Pieces)</label>
-
-                    <input id="oQuantity"
-                           type="number"
-                           min="1"
-                           step="1"
-                           placeholder="100"
-                           required>
-
-                    <label>Price Per Piece (BDT)</label>
-
-                    <input id="oPrice"
-                           type="number"
-                           min="0"
-                           step="0.01"
-                           placeholder="100"
-                           required>
-
-                    <div class="stat">
-                        Order Total
-                        <strong id="orderPreview">৳0.00</strong>
-                    </div>
-
-                    <label>Order Status</label>
-
-                    <select id="oStatus">
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-
-                    <button id="saveOrderBtn" type="submit">
-                        Save Order
-                    </button>
-
-                </form>
-            </div>
-
-        </section>
-
-    </main>
-
-    <div id="message" role="status" aria-live="polite"></div>
-
-</div>
+<footer>© Star Gold Pipe | Order Management System</footer>
 
 <script>
-"use strict";
+(() => {
+  const $ = id => document.getElementById(id);
+  let db = null;
+  let currentUser = null;
+  let currentProfile = null;
+  let customers = [];
+  let orders = [];
+  let payments = [];
 
-/* =====================================
-   STAR GOLD PIPE ORDER MANAGEMENT
-===================================== */
+  const money = n => "৳" + Number(n || 0).toLocaleString("en-BD", {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
 
-let db = null;
-let customers = [];
-let orders = [];
+  function message(id, text, good = false) {
+    $(id).textContent = text;
+    $(id).className = "message " + (good ? "good" : "bad");
+  }
 
-const $ = id => document.getElementById(id);
+  function show(id) { $(id).classList.remove("hidden"); }
+  function hide(id) { $(id).classList.add("hidden"); }
 
-function message(text, type = "") {
-    $("message").textContent = text;
-    $("message").className = type;
-}
-
-function setBusy(button, busy, busyText = "Please wait...") {
-    if (busy) {
-        button.dataset.oldText = button.textContent;
-        button.textContent = busyText;
-        button.disabled = true;
-    } else {
-        button.textContent = button.dataset.oldText || button.textContent;
-        button.disabled = false;
-    }
-}
-
-function showSection(id) {
-    ["setup", "login", "app"].forEach(section => {
-        $(section).classList.add("hidden");
-    });
-
-    $(id).classList.remove("hidden");
-}
-
-function validProjectUrl(value) {
+  function configure(url, key) {
     try {
-        const url = new URL(value);
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:" ||
+          !parsed.hostname.endsWith(".supabase.co")) {
+        throw new Error("Supabase Project URL সঠিক নয়।");
+      }
+      if (!key.startsWith("sb_publishable_") &&
+          !key.startsWith("eyJ")) {
+        throw new Error("Publishable Key সঠিক নয়। Supabase থেকে সঠিক Key কপি করুন।");
+      }
 
-        return url.protocol === "https:" &&
-               url.hostname.endsWith(".supabase.co") &&
-               url.hostname.length > ".supabase.co".length &&
-               !url.username &&
-               !url.password;
-    } catch {
-        return false;
+      db = window.supabase.createClient(url.replace(/\/$/, ""), key);
+      return true;
+    } catch (e) {
+      db = null;
+      throw e;
     }
-}
+  }
 
-/* DATABASE CONFIGURATION */
+  function savedSettings() {
+    return {
+      url: localStorage.getItem("sgp_url") || "",
+      key: localStorage.getItem("sgp_key") || ""
+    };
+  }
 
-$("configForm").addEventListener("submit", async event => {
-    event.preventDefault();
+  function setupUI() {
+    show("setup");
+    show("loginCard");
+    hide("app");
+  }
 
-    const url = $("projectUrl").value.trim().replace(/\/+$/, "");
+  function appUI() {
+    hide("setup");
+    hide("loginCard");
+    show("app");
+  }
+
+  $("configForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const url = $("projectUrl").value.trim();
     const key = $("publicKey").value.trim();
 
-    if (!validProjectUrl(url)) {
-        message(
-            "Invalid Project URL. Enter the URL shown in your Supabase project.",
-            "error"
-        );
-        return;
-    }
-
-    if (!key || /\s/.test(key)) {
-        message("Enter a valid Publishable Key.", "error");
-        return;
-    }
-
-    setBusy($("connectBtn"), true, "Connecting...");
+    $("connectBtn").disabled = true;
+    message("configMessage", "Connecting...");
 
     try {
-        db = window.supabase.createClient(url, key);
+      configure(url, key);
+      const { error } = await db.auth.getSession();
+      if (error) throw error;
 
-        /*
-          Check the Supabase Auth service.
-          This does not create database tables.
-        */
+      localStorage.setItem("sgp_url", url);
+      localStorage.setItem("sgp_key", key);
+      message("configMessage", "Database connection configured.", true);
+      hide("setup");
+      show("loginCard");
 
-        const { error } = await db.auth.getSession();
-
-        if (error) {
-            throw error;
-        }
-
-        localStorage.setItem("sg_supabase_url", url);
-        localStorage.setItem("sg_supabase_key", key);
-
-        $("changeConfigBtn").classList.remove("hidden");
-
-        showSection("login");
-        message(
-            "Supabase connection initialized. Log in with an existing employee account.",
-            "success"
-        );
-
-        await checkSession();
-
-    } catch (error) {
-        db = null;
-
-        message(
-            "Connection setup failed: " +
-            (error.message || "Unknown error"),
-            "error"
-        );
+      const { data } = await db.auth.getSession();
+      if (data.session) await loadApp(data.session.user);
+    } catch (err) {
+      message("configMessage", err.message || "Database connection failed.");
     } finally {
-        setBusy($("connectBtn"), false);
+      $("connectBtn").disabled = false;
     }
-});
+  });
 
-function connectDatabase() {
-    const url = localStorage.getItem("sg_supabase_url");
-    const key = localStorage.getItem("sg_supabase_key");
+  $("clearConfig").addEventListener("click", async () => {
+    if (!confirm("এই ব্রাউজারে সংরক্ষিত Database Settings মুছবেন?")) return;
+    localStorage.removeItem("sgp_url");
+    localStorage.removeItem("sgp_key");
+    db = null;
+    setupUI();
+    message("configMessage", "Saved settings cleared.", true);
+  });
 
-    if (!url || !key || !validProjectUrl(url)) {
-        showSection("setup");
-        return;
-    }
-
-    try {
-        db = window.supabase.createClient(url, key);
-
-        $("projectUrl").value = url;
-        $("publicKey").value = key;
-
-        $("changeConfigBtn").classList.remove("hidden");
-
-        showSection("login");
-
-        checkSession();
-
-    } catch (error) {
-        db = null;
-        showSection("setup");
-        message("Could not initialize Supabase: " + error.message, "error");
-    }
-}
-
-$("changeConfigBtn").addEventListener("click", () => {
-    showSection("setup");
-    message("Update your Supabase settings and reconnect.");
-});
-
-/* LOGIN */
-
-$("loginForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
     if (!db) {
-        message("Connect the database first.", "error");
-        return;
+      message("loginMessage", "আগে Database Connect করুন।");
+      return;
     }
 
-    setBusy($("loginBtn"), true, "Logging in...");
-    message("Checking login details...");
+    $("loginButton").disabled = true;
+    message("loginMessage", "Logging in...");
 
     try {
-        const { data, error } = await db.auth.signInWithPassword({
-            email: $("email").value.trim(),
-            password: $("password").value
-        });
-
-        if (error) throw error;
-
-        await enterApp(data.user);
-
-    } catch (error) {
-        message("Login failed: " + error.message, "error");
+      const { data, error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
+      if (error) throw error;
+      await loadApp(data.user);
+    } catch (err) {
+      message("loginMessage", "Login failed: " + err.message);
     } finally {
-        setBusy($("loginBtn"), false);
+      $("loginButton").disabled = false;
     }
-});
+  });
 
-async function checkSession() {
-    if (!db) return;
+  async function loadApp(user) {
+    currentUser = user;
 
-    try {
-        const { data, error } = await db.auth.getSession();
+    const { data: profile, error } = await db
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("id", user.id)
+      .maybeSingle();
 
-        if (error) throw error;
-
-        if (data.session) {
-            await enterApp(data.session.user);
-        }
-    } catch (error) {
-        message("Session error: " + error.message, "error");
-    }
-}
-
-async function enterApp(user) {
-    $("userEmail").textContent = user.email || "Employee";
-
-    showSection("app");
-
-    await loadData();
-}
-
-$("logoutBtn").addEventListener("click", async () => {
-    if (!db) return;
-
-    try {
-        const { error } = await db.auth.signOut();
-
-        if (error) throw error;
-
-        customers = [];
-        orders = [];
-
-        showSection("login");
-
-        $("password").value = "";
-
-        message("You have logged out successfully.", "success");
-
-    } catch (error) {
-        message("Logout failed: " + error.message, "error");
-    }
-});
-
-/* NAVIGATION */
-
-document.querySelectorAll(".tabs button").forEach(button => {
-    button.addEventListener("click", () => {
-        const tabName = button.dataset.tab;
-
-        document.querySelectorAll(".tab").forEach(tab => {
-            tab.classList.add("hidden");
-        });
-
-        $(tabName).classList.remove("hidden");
-
-        document.querySelectorAll(".tabs button").forEach(btn => {
-            btn.classList.remove("active");
-        });
-
-        button.classList.add("active");
-    });
-});
-
-/* HTML SAFETY */
-
-function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[character]);
-}
-
-function formatMoney(value) {
-    return Number(value || 0).toLocaleString("en-BD", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
-
-/* LOAD DATA */
-
-async function loadData() {
-    if (!db) {
-        message("Database is not connected.", "error");
-        return;
+    if (error) {
+      await db.auth.signOut();
+      setupUI();
+      message("loginMessage",
+        "Profile load failed: " + error.message +
+        ". Database Policies পরীক্ষা করুন।");
+      return;
     }
 
-    message("Loading business data...");
-
-    try {
-        const [customerResult, orderResult] = await Promise.all([
-            db.from("customers")
-              .select("*")
-              .order("created_at", { ascending: false }),
-
-            db.from("orders")
-              .select("*, customers(name, phone)")
-              .order("created_at", { ascending: false })
-        ]);
-
-        if (customerResult.error) {
-            throw new Error(
-                "Customers table: " + customerResult.error.message
-            );
-        }
-
-        if (orderResult.error) {
-            throw new Error(
-                "Orders table: " + orderResult.error.message
-            );
-        }
-
-        customers = customerResult.data || [];
-        orders = orderResult.data || [];
-
-        renderCustomers();
-        renderOrders();
-        renderDashboard();
-        populateCustomerSelect();
-
-        message("Business data loaded successfully.", "success");
-
-    } catch (error) {
-        message(
-            "Could not load data.\n" +
-            error.message +
-            "\nCheck whether your database tables and permissions are configured.",
-            "error"
-        );
-    }
-}
-
-$("refreshBtn").addEventListener("click", loadData);
-
-/* CUSTOMERS */
-
-$("customerForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!db) return;
-
-    const button = $("saveCustomerBtn");
-
-    const record = {
-        name: $("cName").value.trim(),
-        phone: $("cPhone").value.trim(),
-        address: $("cAddress").value.trim() || null
-    };
-
-    if (!record.name || !record.phone) {
-        message("Enter customer name and phone number.", "error");
-        return;
+    if (!profile) {
+      await db.auth.signOut();
+      setupUI();
+      message("loginMessage",
+        "এই User-এর Profile নেই। Admin-কে Profile তৈরি করতে বলুন।");
+      return;
     }
 
-    setBusy(button, true, "Saving...");
+    currentProfile = profile;
+    appUI();
 
-    try {
-        const { error } = await db
-            .from("customers")
-            .insert(record);
+    $("welcome").textContent =
+      (profile.full_name || user.email) + " • " + profile.role;
 
-        if (error) throw error;
+    if (profile.role === "admin") show("employeeTab");
+    else hide("employeeTab");
 
-        event.target.reset();
+    await refreshData();
+  }
 
-        message("Customer saved successfully.", "success");
+  async function refreshData() {
+    if (!db || !currentUser) return;
 
-        await loadData();
+    const [c, o, p] = await Promise.all([
+      db.from("customers").select("*").order("created_at", { ascending: false }),
+      db.from("orders").select("*").order("created_at", { ascending: false }),
+      db.from("payments").select("*").order("created_at", { ascending: false })
+    ]);
 
-    } catch (error) {
-        message("Could not save customer: " + error.message, "error");
-    } finally {
-        setBusy(button, false);
-    }
-});
-
-function renderCustomers() {
-    const search = $("customerSearch").value.trim().toLowerCase();
-
-    const list = customers.filter(customer =>
-        String(customer.name || "").toLowerCase().includes(search) ||
-        String(customer.phone || "").toLowerCase().includes(search)
-    );
-
-    if (!list.length) {
-        $("customerTable").innerHTML = "<p>No customers found.</p>";
-        populateCustomerSelect();
-        return;
+    if (c.error || o.error || p.error) {
+      alert("Data load error: " +
+        [c.error, o.error, p.error].filter(Boolean).map(e => e.message).join(" | "));
+      return;
     }
 
-    $("customerTable").innerHTML = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${list.map(customer => `
-                    <tr>
-                        <td>${escapeHtml(customer.name)}</td>
-                        <td>${escapeHtml(customer.phone)}</td>
-                        <td>${escapeHtml(customer.address || "-")}</td>
-                    </tr>
-                `).join("")}
-            </tbody>
-        </table>
-    `;
+    customers = c.data || [];
+    orders = o.data || [];
+    payments = p.data || [];
 
-    populateCustomerSelect();
-}
+    renderData();
+  }
 
-$("customerSearch").addEventListener("input", renderCustomers);
+  function renderData() {
+    const totalPieces = orders.reduce((s, o) => s + Number(o.quantity), 0);
+    const delivered = orders.reduce((s, o) => s + Number(o.delivered_quantity), 0);
+    const sales = orders.reduce((s, o) => s + Number(o.quantity) * Number(o.unit_price), 0);
+    const paid = payments.reduce((s, p) => s + Number(p.amount), 0);
 
-function populateCustomerSelect() {
-    const select = $("oCustomer");
-    const previousValue = select.value;
-
-    select.innerHTML =
-        '<option value="">Select Customer</option>' +
-        customers.map(customer => `
-            <option value="${escapeHtml(customer.id)}">
-                ${escapeHtml(customer.name)} —
-                ${escapeHtml(customer.phone)}
-            </option>
-        `).join("");
-
-    if (customers.some(customer =>
-        String(customer.id) === previousValue
-    )) {
-        select.value = previousValue;
-    }
-}
-
-/* ORDERS */
-
-function renderOrders() {
-    if (!orders.length) {
-        $("ordersTable").innerHTML = "<p>No orders yet.</p>";
-        return;
-    }
-
-    $("ordersTable").innerHTML = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Product</th>
-                    <th>Size</th>
-                    <th>Pieces</th>
-                    <th>Total (BDT)</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${orders.map(order => `
-                    <tr>
-                        <td>${escapeHtml(order.id)}</td>
-                        <td>${escapeHtml(order.customers?.name || "-")}</td>
-                        <td>${escapeHtml(order.product_name)}</td>
-                        <td>${escapeHtml(order.product_size || "-")}</td>
-                        <td>${escapeHtml(order.quantity)}</td>
-                        <td>৳${formatMoney(
-                            order.total_amount ??
-                            (Number(order.quantity) * Number(order.unit_price))
-                        )}</td>
-                        <td>${escapeHtml(order.order_status)}</td>
-                    </tr>
-                `).join("")}
-            </tbody>
-        </table>
-    `;
-}
-
-/* DASHBOARD */
-
-function renderDashboard() {
     $("customerCount").textContent = customers.length;
     $("orderCount").textContent = orders.length;
+    $("pieceCount").textContent = totalPieces;
+    $("deliveredCount").textContent = delivered;
+    $("salesValue").textContent = money(sales);
+    $("paidValue").textContent = money(paid);
+    $("dueValue").textContent = money(sales - paid);
 
-    const activeOrders = orders.filter(
-        order => order.order_status !== "Cancelled"
-    );
+    $("orderCustomer").innerHTML =
+      '<option value="">কাস্টমার নির্বাচন করুন</option>' +
+      customers.map(c => `<option value="${c.id}">${escapeHTML(c.name)} — ${escapeHTML(c.phone || "")}</option>`).join("");
 
-    const totalSales = activeOrders.reduce((sum, order) => {
-        const total = order.total_amount ??
-            (Number(order.quantity) * Number(order.unit_price));
+    const openOrders = orders.filter(o => Number(o.quantity) > Number(o.delivered_quantity));
+    $("deliveryOrder").innerHTML =
+      '<option value="">অর্ডার নির্বাচন করুন</option>' +
+      openOrders.map(o => {
+        const c = customers.find(x => x.id === o.customer_id);
+        return `<option value="${o.id}">${escapeHTML(c?.name || "Customer")} — ${escapeHTML(o.product_name)} ${escapeHTML(o.size)} (বাকি ${Number(o.quantity)-Number(o.delivered_quantity)} পিস)</option>`;
+      }).join("");
 
-        return sum + Number(total || 0);
-    }, 0);
+    $("paymentOrder").innerHTML =
+      '<option value="">অর্ডার নির্বাচন করুন</option>' +
+      orders.map(o => {
+        const c = customers.find(x => x.id === o.customer_id);
+        return `<option value="${o.id}">${escapeHTML(c?.name || "Customer")} — ${escapeHTML(o.product_name)} ${escapeHTML(o.size)} (${money(Number(o.quantity)*Number(o.unit_price))})</option>`;
+      }).join("");
 
-    const totalPieces = activeOrders.reduce((sum, order) => {
-        return sum + Number(order.quantity || 0);
-    }, 0);
+    $("orderRows").innerHTML = orders.map(o => {
+      const c = customers.find(x => x.id === o.customer_id);
+      const remaining = Number(o.quantity) - Number(o.delivered_quantity);
+      return `<tr>
+        <td>${new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+        <td>${escapeHTML(c?.name || "Unknown")}</td>
+        <td>${escapeHTML(o.product_name)}</td>
+        <td>${escapeHTML(o.size || "")}</td>
+        <td>${Number(o.quantity)}</td>
+        <td>${Number(o.delivered_quantity)}</td>
+        <td>${remaining}</td>
+        <td>${money(o.unit_price)}</td>
+        <td>${money(Number(o.quantity)*Number(o.unit_price))}</td>
+      </tr>`;
+    }).join("");
 
-    $("salesTotal").textContent = "৳" + formatMoney(totalSales);
+    $("customerRows").innerHTML = customers.map(c => `<tr>
+      <td>${escapeHTML(c.name)}</td>
+      <td>${escapeHTML(c.phone || "")}</td>
+      <td>${escapeHTML(c.address || "")}</td>
+    </tr>`).join("");
+  }
 
-    $("piecesTotal").textContent =
-        totalPieces.toLocaleString("en-BD");
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    }[ch]));
+  }
 
-    const recent = orders.slice(0, 5);
+  $("customerForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const record = {
+      name: $("customerName").value.trim(),
+      phone: $("customerPhone").value.trim(),
+      address: $("customerAddress").value.trim()
+    };
 
-    $("recentOrders").innerHTML = recent.length
-        ? `
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Pieces</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${recent.map(order => `
-                        <tr>
-                            <td>${escapeHtml(order.id)}</td>
-                            <td>${escapeHtml(order.customers?.name || "-")}</td>
-                            <td>${escapeHtml(order.quantity)}</td>
-                            <td>৳${formatMoney(
-                                order.total_amount ??
-                                (Number(order.quantity) * Number(order.unit_price))
-                            )}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `
-        : "<p>No orders yet.</p>";
-}
-
-/* ORDER TOTAL PREVIEW */
-
-function updatePreview() {
-    const quantity = Number($("oQuantity").value || 0);
-    const price = Number($("oPrice").value || 0);
-
-    $("orderPreview").textContent =
-        "৳" + formatMoney(quantity * price);
-}
-
-$("oQuantity").addEventListener("input", updatePreview);
-$("oPrice").addEventListener("input", updatePreview);
-
-/* CREATE ORDER */
-
-$("orderForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!db) {
-        message("Database is not connected.", "error");
-        return;
+    const { error } = await db.from("customers").insert(record);
+    if (error) {
+      message("customerMessage", error.message);
+      return;
     }
 
-    const quantity = Number($("oQuantity").value);
-    const price = Number($("oPrice").value);
-    const customerId = $("oCustomer").value;
+    e.target.reset();
+    message("customerMessage", "Customer saved successfully.", true);
+    await refreshData();
+  });
 
-    if (!customerId) {
-        message("Please select a customer.", "error");
-        return;
-    }
+  $("orderForm").addEventListener("submit", async e => {
+    e.preventDefault();
 
-    if (!Number.isSafeInteger(quantity) || quantity < 1) {
-        message("Enter a valid quantity.", "error");
-        return;
-    }
+    const quantity = Number($("quantity").value);
+    const unitPrice = Number($("unitPrice").value);
 
-    if (!Number.isFinite(price) || price < 0) {
-        message("Enter a valid price.", "error");
-        return;
+    if (!Number.isSafeInteger(quantity) || quantity <= 0 || unitPrice < 0) {
+      message("orderMessage", "Quantity ও Price সঠিকভাবে দিন।");
+      return;
     }
 
     const record = {
-        customer_id: customerId,
-        product_name: $("oProduct").value.trim(),
-        product_size: $("oSize").value.trim(),
-        quantity: quantity,
-        unit_price: price,
-        order_status: $("oStatus").value
+      customer_id: $("orderCustomer").value,
+      product_name: $("productName").value,
+      size: $("pipeSize").value.trim(),
+      quantity,
+      delivered_quantity: 0,
+      unit_price: unitPrice
     };
 
-    if (!record.product_name || !record.product_size) {
-        message("Enter product name and pipe size.", "error");
-        return;
+    const { error } = await db.from("orders").insert(record);
+    if (error) {
+      message("orderMessage", error.message);
+      return;
     }
 
-    const button = $("saveOrderBtn");
+    e.target.reset();
+    message("orderMessage", "Order saved successfully.", true);
+    await refreshData();
+  });
 
-    setBusy(button, true, "Saving Order...");
+  $("deliveryForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const order = orders.find(o => o.id === $("deliveryOrder").value);
+    const amount = Number($("deliveryQuantity").value);
+
+    if (!order || !Number.isSafeInteger(amount) || amount <= 0) {
+      message("deliveryMessage", "সঠিক Order ও Quantity নির্বাচন করুন।");
+      return;
+    }
+
+    const updated = Number(order.delivered_quantity) + amount;
+    if (updated > Number(order.quantity)) {
+      message("deliveryMessage", "ডেলিভারির পরিমাণ অর্ডারের অবশিষ্ট পরিমাণের বেশি।");
+      return;
+    }
+
+    const { error } = await db.from("orders")
+      .update({ delivered_quantity: updated })
+      .eq("id", order.id);
+
+    if (error) {
+      message("deliveryMessage", error.message);
+      return;
+    }
+
+    e.target.reset();
+    message("deliveryMessage", "Delivery updated successfully.", true);
+    await refreshData();
+  });
+
+  $("paymentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const orderId = $("paymentOrder").value;
+    const amount = Number($("paymentAmount").value);
+
+    if (!orderId || !Number.isFinite(amount) || amount <= 0) {
+      message("paymentMessage", "সঠিক Order ও Payment Amount দিন।");
+      return;
+    }
+
+    const { error } = await db.from("payments").insert({
+      order_id: orderId,
+      amount
+    });
+
+    if (error) {
+      message("paymentMessage", error.message);
+      return;
+    }
+
+    e.target.reset();
+    message("paymentMessage", "Payment recorded successfully.", true);
+    await refreshData();
+  });
+
+  $("employeeForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    if (currentProfile?.role !== "admin") {
+      message("employeeMessage", "শুধুমাত্র Admin এই কাজ করতে পারবেন।");
+      return;
+    }
+
+    const id = $("employeeId").value.trim();
+    const name = $("employeeName").value.trim();
+
+    const { error } = await db.from("profiles").insert({
+      id,
+      full_name: name,
+      role: "employee"
+    });
+
+    if (error) {
+      message("employeeMessage", error.message);
+      return;
+    }
+
+    e.target.reset();
+    message("employeeMessage", "Employee Profile created.", true);
+  });
+
+  document.querySelectorAll("[data-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(s => hide(s.id));
+      show(btn.dataset.tab);
+    });
+  });
+
+  $("refreshButton").addEventListener("click", refreshData);
+
+  $("logoutButton").addEventListener("click", async () => {
+    const { error } = await db.auth.signOut();
+    if (error) {
+      alert("Logout failed: " + error.message);
+      return;
+    }
+    currentUser = null;
+    currentProfile = null;
+    setupUI();
+  });
+
+  async function start() {
+    const saved = savedSettings();
+
+    if (!saved.url || !saved.key) {
+      setupUI();
+      return;
+    }
+
+    $("projectUrl").value = saved.url;
+    $("publicKey").value = saved.key;
 
     try {
-        const { error } = await db
-            .from("orders")
-            .insert(record);
+      configure(saved.url, saved.key);
+      hide("setup");
 
-        if (error) throw error;
+      const { data, error } = await db.auth.getSession();
+      if (error) throw error;
 
-        event.target.reset();
-
-        $("oProduct").value = "Star Gold Thread Pipe";
-
-        updatePreview();
-
-        message("Order created successfully.", "success");
-
-        await loadData();
-
-        document.querySelector(
-            '.tabs button[data-tab="orders"]'
-        ).click();
-
-    } catch (error) {
-        message("Could not save order: " + error.message, "error");
-    } finally {
-        setBusy(button, false);
+      if (data.session) await loadApp(data.session.user);
+      else show("loginCard");
+    } catch (err) {
+      setupUI();
+      message("configMessage",
+        "Saved settings কাজ করছে না। Project URL ও Publishable Key আবার যাচাই করুন.");
     }
-});
+  }
 
-/* START APPLICATION */
-
-(function init() {
-    if (!window.supabase) {
-        message(
-            "Supabase library did not load. Check your internet connection and refresh.",
-            "error"
-        );
-        return;
-    }
-
-    const savedUrl = localStorage.getItem("sg_supabase_url");
-    const savedKey = localStorage.getItem("sg_supabase_key");
-
-    if (savedUrl && savedKey) {
-        connectDatabase();
-    } else {
-        showSection("setup");
-    }
+  start();
 })();
 </script>
-
 </body>
 </html>
